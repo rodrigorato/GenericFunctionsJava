@@ -11,7 +11,7 @@ sourceCompatibility = 1.8
 mainClassName = 'ist.meic.pa.GenericFunctions.WithGenericFunctions'
 
 configurations {
-    jar.archiveName = "GenericFunctions.jar"
+    jar.archiveName = "genericFunctions.jar"
 }
 
 dependencies {
