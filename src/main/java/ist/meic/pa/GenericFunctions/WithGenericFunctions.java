@@ -16,7 +16,7 @@ public class WithGenericFunctions {
             String[] parameters = Arrays.copyOfRange(args, 1, args.length);
 
             // Hand over control, providing the right arguments
-            newMain.invoke(null, parameters);
+            newMain.invoke(null, (Object) parameters);
 
         } catch(ArrayIndexOutOfBoundsException e) {
             System.out.println("No main class was specified! Can't hand over control, ending.");
