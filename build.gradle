@@ -17,6 +17,8 @@ configurations {
 run {
     if (project.hasProperty("arg")) {
         args Eval.me(arg)
+    } else {
+        args = ['ist.meic.pa.GenericFunctions.examples.combine.CombineExample']
     }
 }
 
