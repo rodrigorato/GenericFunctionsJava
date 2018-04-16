@@ -1,6 +1,7 @@
 package ist.meic.pa.GenericFunctions.translator;
 
 import ist.meic.pa.GenericFunctions.GenericFunction;
+import ist.meic.pa.GenericFunctions.injectors.GenericCallInjector;
 import javassist.*;
 
 import java.util.Arrays;
@@ -22,7 +23,7 @@ public class GenericFunctionTranslator implements Translator {
             if(Arrays.stream(loadedClass.getAnnotations())
                     .anyMatch(p -> p instanceof GenericFunction)) {
                 // Apply our instrumentation!
-
+                new GenericCallInjector().injectCode(loadedClass);
             }
         } catch (ClassNotFoundException e) {
             // TODO: handle this? is this ever going to happen?
