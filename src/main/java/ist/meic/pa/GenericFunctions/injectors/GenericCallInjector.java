@@ -29,13 +29,17 @@ public class GenericCallInjector implements AbstractInjector {
        */
 
         // TODO: Do right checking for most generic and different methods here
-        CtMethod[] methods = ctClass.getMethods();
-        CtMethod mostAbstractMethod = Arrays.stream(methods)
-                .filter(GenericCallInjector::checkAllObject)
-                .findFirst()
-                .orElse(null); // FIXME: return new method
+        try {
+            CtMethod[] methods = ctClass.getDeclaredMethods();
+            CtMethod mostAbstractMethod = Arrays.stream(methods)
+                    .filter(GenericCallInjector::checkAllObject)
+                    .findFirst()
+                    .orElse(null); // FIXME: return new method
 
-        injectCodeInMostAbstractMethod(mostAbstractMethod);
+            injectCodeInMostAbstractMethod(mostAbstractMethod);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -47,7 +51,12 @@ public class GenericCallInjector implements AbstractInjector {
      * @return the intercepted method
      */
     private static CtMethod injectCodeInMostAbstractMethod(CtMethod m) {
-        return m;
+        if(m != null) {
+            System.out.println(m.getLongName());
+            return m;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -58,7 +67,7 @@ public class GenericCallInjector implements AbstractInjector {
     private static boolean checkAllObject(CtMethod m) {
         try {
             // Can't really do t instanceof Object, so we just hack it here.
-            return Arrays.stream(m.getParameterTypes()).allMatch(t -> t.getClass().getName().equals("Object"));
+            return Arrays.stream(m.getParameterTypes()).allMatch(t -> t.getName().equals(Object.class.getName()));
         } catch (NotFoundException e) {
             return false;
         }
