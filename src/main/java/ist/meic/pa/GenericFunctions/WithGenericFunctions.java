@@ -1,40 +1,39 @@
 package ist.meic.pa.GenericFunctions;
 
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.NotFoundException;
+import ist.meic.pa.GenericFunctions.translator.GenericFunctionTranslator;
+import javassist.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class WithGenericFunctions {
-    public static void main(String[] args) throws CannotCompileException {
+    public static void main(String[] args) {
 
-        // Handle control to next class in args
         try {
-            ClassPool cp = ClassPool.getDefault();
+            // Get our translator that will do our instrumentation
+            Translator translator = new GenericFunctionTranslator();
 
-            CtClass ct = cp.get(args[0]);
-
-            //TODO: changes to ctclass should go around here
-
-            Class c = ct.toClass();
-
-            Method newMain = c.getMethod("main", String[].class);
+            // Get the current class pool and add our translator to it's loader
+            ClassPool classPool = ClassPool.getDefault();
+            Loader classLoader = new Loader();
+            classLoader.addTranslator(classPool, translator);
 
             // Get the new parameters for the class we're about to hand over control to
             String[] parameters = Arrays.copyOfRange(args, 1, args.length);
 
             // Hand over control, providing the right arguments
-            newMain.invoke(null, (Object) parameters);
+            classLoader.run(args[0], parameters);
 
         } catch(ArrayIndexOutOfBoundsException e) {
             System.out.println("No main class was specified! Can't hand over control, ending.");
-            throw e;
+            System.exit(-1);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NotFoundException e) {
             // Can't really do anything about this, let's just end the program
+            System.out.println("Reflection failed...");
+            System.exit(-1);
+        } catch (Throwable throwable) {
+            System.out.println("Failed to run main class!");
             System.exit(-1);
         }
     }
