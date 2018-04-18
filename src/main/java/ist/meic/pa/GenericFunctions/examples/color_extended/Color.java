@@ -1,8 +1,11 @@
 package ist.meic.pa.GenericFunctions.examples.color_extended;
 
+import ist.meic.pa.GenericFunctions.GenericFunction;
+
+@GenericFunction
 public class Color {
     public static String mix(Color c1, Color c2){
-        return mix(c2, c1);
+        return "a"; // mix(c2, c1);
     }
     public static String mix(Red c1, Red c2) {
         return "More red";
