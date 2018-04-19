@@ -33,7 +33,7 @@ public class WithGenericFunctions {
             System.out.println("Reflection failed...");
             System.exit(-1);
         } catch (Throwable throwable) {
-            System.out.println("Failed to run main class!");
+            System.out.println("Failed to run main class! - " + throwable.getMessage());
             System.exit(-1);
         }
     }
