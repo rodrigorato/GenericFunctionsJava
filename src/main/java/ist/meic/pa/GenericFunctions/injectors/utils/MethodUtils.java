@@ -1,7 +1,5 @@
 package ist.meic.pa.GenericFunctions.injectors.utils;
 
-import ist.meic.pa.GenericFunctions.injectors.exception.MethodsNotComparableException;
-
 import java.lang.reflect.Method;
 
 public class MethodUtils {
