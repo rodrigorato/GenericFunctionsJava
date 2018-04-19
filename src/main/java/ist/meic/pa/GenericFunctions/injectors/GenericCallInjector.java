@@ -29,6 +29,7 @@ public class GenericCallInjector implements AbstractInjector {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void callBack(Class originalClass, Object[] originalArgs) {
         Method[] declaredMethods = originalClass.getDeclaredMethods();
         for (Method method : declaredMethods) {
@@ -42,7 +43,7 @@ public class GenericCallInjector implements AbstractInjector {
 
     private String generateCallBackFunctionCall() {
         return "ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
-                ".callBack($class, $args);";
+                "." + callBackFunctionName + "($class, $args);";
     }
 
 }
