@@ -2,16 +2,15 @@ package ist.meic.pa.GenericFunctions.injectors;
 
 import ist.meic.pa.GenericFunctions.AfterMethod;
 import ist.meic.pa.GenericFunctions.BeforeMethod;
+import ist.meic.pa.GenericFunctions.injectors.utils.MethodUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.CtNewMethod;
+import javassist.NotFoundException;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * This class is responsible for injecting code into the loaded classes,
@@ -26,17 +25,20 @@ public class GenericCallInjector implements AbstractInjector {
         try {
             for(CtMethod m : ctClass.getDeclaredMethods()) {
                 if(!m.getName().equals(callBackFunctionName)) {
-                        m.insertBefore(generateCallBackFunctionCall(m.getName()));
+                        m.insertBefore(
+                                generateCallBackFunctionCall(m.getLongName(), m.getReturnType().getName()));
                 }
             }
 
         } catch (CannotCompileException e) {
             e.printStackTrace();
+        } catch (NotFoundException e) {
+            e.printStackTrace();
         }
     }
 
     @SuppressWarnings("unused")
-    public static void callBack(Class originalClass, String methodName, Object[] originalArgs) {
+    public static Object callBack(Class originalClass, String methodLongName, Object[] originalArgs) {
         /*
         // Call the respective before methods, from the most specific to the least one
         if(!isSetupMethod()) {
@@ -45,17 +47,16 @@ public class GenericCallInjector implements AbstractInjector {
         }
         */
 
-
-        Method[] declaredMethods = originalClass.getDeclaredMethods();
-        for (Method method : declaredMethods) {
-
-            if(!isSetupMethod(method)) {
-                for (Class parameterType : method.getParameterTypes()) {
-                    System.out.println(parameterType.getName());
-                }
-                System.out.println("");
+        try {
+            Method best = findBestMethod(originalClass, originalArgs);
+            if(!methodLongName.equals(getLongNameFromMethod(best))) {
+                return best.invoke(null, originalArgs);
             }
+
+        } catch (Exception e) {
         }
+
+        return null;
 
         /*
         // Call the respective after methods, from the least specific to the most one
@@ -63,6 +64,27 @@ public class GenericCallInjector implements AbstractInjector {
             doAfterMethods();
         }
         */
+    }
+
+    private static String getLongNameFromMethod(Method m) {
+        String[] names = m.toString().split(" ");
+        return names[names.length -1];
+    }
+
+    public static Method findBestMethod(Class originalClass, Object[] args) {
+        Method[] allMethods = originalClass.getDeclaredMethods();
+
+        Method bestMethod = null;
+        for(Method candidate : allMethods) {
+            if(MethodUtils.isMethodApplicable(candidate, args)){
+                if(bestMethod == null ||
+                        MethodUtils.isMethodMoreSpecificThan(candidate, bestMethod)) {
+                    bestMethod = candidate;
+                }
+            }
+        }
+        return bestMethod;
+
     }
 
     public static boolean isSetupMethod(Method m) {
@@ -78,9 +100,12 @@ public class GenericCallInjector implements AbstractInjector {
         return false;
     }
 
-    private String generateCallBackFunctionCall(String methodName) {
-        return "ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
-                "." + callBackFunctionName + "($class, \"" + methodName + "\", $args);";
+    private String generateCallBackFunctionCall(String methodName, String returnClassName) {
+        return "Object ret = ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+                "." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
+                "if(ret != null) {" +
+                "   return (" + returnClassName + ")ret;" +
+                "}";
     }
 
 }
