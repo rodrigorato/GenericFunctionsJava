@@ -54,6 +54,7 @@ public class GenericCallInjector implements AbstractInjector {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return null;
@@ -76,9 +77,9 @@ public class GenericCallInjector implements AbstractInjector {
 
         Method bestMethod = null;
         for(Method candidate : allMethods) {
-            if(MethodUtils.isMethodApplicable(candidate, args)){
-                if(bestMethod == null ||
-                        MethodUtils.isMethodMoreSpecificThan(candidate, bestMethod)) {
+            if(MethodUtils.isMethodApplicable(candidate, args)) {
+                if (bestMethod == null ||
+                        MethodUtils.isMethodMoreSpecific(candidate, bestMethod)) {
                     bestMethod = candidate;
                 }
             }
