@@ -63,6 +63,7 @@ public class MethodUtils {
      * Checks if a given class is a subclass/subinterface of another class
      * @return true when the first argument is a subclass/subinterface (or the same) of the second argument, false otherwise
      */
+    @SuppressWarnings("unchecked")
     public static boolean isSubOf(Class thisClass, Class thatClass){
         return thatClass.isAssignableFrom(thisClass);
     }
@@ -71,6 +72,7 @@ public class MethodUtils {
      * Checks if a given class is a superclass/superinterface of another class
      * @return true when the first argument is a superclass/superinterface (or the same) of the second argument, false otherwise
      */
+    @SuppressWarnings("unchecked")
     public static boolean isSuperOf(Class thisClass, Class thatClass){
         return thisClass.isAssignableFrom(thatClass);
     }
