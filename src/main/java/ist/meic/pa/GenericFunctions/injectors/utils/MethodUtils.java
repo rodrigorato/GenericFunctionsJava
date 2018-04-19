@@ -11,7 +11,6 @@ public class MethodUtils {
      * @return a number below 0 if the first method is more specific than the second, a number above 0 otherwise and 0 if they're the same
      */
     public static int methodArgumentsComparator(Method thisMethod, Method thatMethod) {
-
         for(int p = 0; p < thisMethod.getParameterCount(); p++) {
             Class thisMethodParameter = thisMethod.getParameterTypes()[p];
             Class thatMethodParameter = thatMethod.getParameterTypes()[p];
@@ -23,15 +22,32 @@ public class MethodUtils {
 
             if(thisMethodParameter.isAssignableFrom(thatMethodParameter)) {
                 return 1;
-
             } else if (thatMethodParameter.isAssignableFrom(thisMethodParameter)) {
                 return -1;
-
             }
+        }
+        return 0;
+    }
 
+    /**
+     * Compares 2 methods in order to find if the first one is more specific than the second one
+     * @return true if the first method is more specific than the second, false otherwise
+     */
+    public static boolean isMethodMoreSpecificThan(Method thisMethod, Method thatMethod) {
+        return methodArgumentsComparator(thisMethod, thatMethod) < 0;
+    }
+
+    public static boolean isMethodApplicable(Method thisMethod, Object[] args) {
+        if(thisMethod.getParameterCount() != args.length){
+            return false;
         }
 
-        return 0;
+        for(int p = 0; p < thisMethod.getParameterCount(); p++) {
+            if(!classesInSameHierarchy(thisMethod.getParameterTypes()[p], args[p].getClass())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean areMethodsComparable(Method thisMethod, Method thatMethod) {
