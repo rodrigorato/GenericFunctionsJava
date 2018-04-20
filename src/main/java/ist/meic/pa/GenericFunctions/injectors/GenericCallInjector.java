@@ -97,6 +97,7 @@ public class GenericCallInjector implements AbstractInjector {
                     for(int i = 0; i < beforeMethods.size(); i++){
                         if(MethodUtils.isMethodMoreSpecific(candidate,beforeMethods.get(i))){
                             beforeMethods.add(i,candidate);
+                            added = true;
                             break;
                         }
                     }
@@ -138,6 +139,7 @@ public class GenericCallInjector implements AbstractInjector {
                     for(int i = 0; i < afterMethods.size(); i++){
                         if(MethodUtils.isMethodMoreSpecific(afterMethods.get(i),candidate)){
                             afterMethods.add(i,candidate);
+                            added = true;
                             break;
                         }
                     }
