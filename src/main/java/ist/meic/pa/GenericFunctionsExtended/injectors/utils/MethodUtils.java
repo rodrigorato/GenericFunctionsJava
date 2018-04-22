@@ -1,11 +1,25 @@
 package ist.meic.pa.GenericFunctionsExtended.injectors.utils;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 public class MethodUtils {
 
-public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
+   public static void callMethodList(List<Method> methods, Object[] arguments) {
+       try {
+           for(Method m : methods) {
+                   m.invoke(null, arguments);
+           }
+       } catch (Exception e) {
+           // Can't really do anything
+           e.printStackTrace();
+       }
+   }
+
+    public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
         return compareMethodArguments(originalArgs, thisMethod, thatMethod) < 0;
     }
 
