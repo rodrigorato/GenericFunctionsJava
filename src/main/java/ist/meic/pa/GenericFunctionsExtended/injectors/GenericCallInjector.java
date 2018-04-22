@@ -8,9 +8,11 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is responsible for injecting code into the loaded classes,
@@ -22,6 +24,7 @@ public class GenericCallInjector implements AbstractInjector {
     public static boolean isSetup = false;
     public static boolean beforeMethodsDone = false;
     public static boolean existsApplicableMethod = false;
+    public static Map<String,List<Method>> effectiveMethodMap = new HashMap<>();
 
     @Override
     public void injectCode(CtClass ctClass) {
@@ -43,7 +46,20 @@ public class GenericCallInjector implements AbstractInjector {
 
     @SuppressWarnings("unused")
     public static Object callBack(Class originalClass, String methodLongName, Object[] originalArgs) {
+
+        String effectiveMethodKey = "";
+        for (Object o : originalArgs) {
+            effectiveMethodKey += o.getClass().getCanonicalName();
+        }
+
+        if(effectiveMethodMap.containsKey(effectiveMethodKey)){
+            return MethodUtils.callMethodList(effectiveMethodMap.get(effectiveMethodKey),originalArgs);
+        }
+
+
         Method best = findBestMethod(originalClass, originalArgs);
+
+        LinkedList<Method> effectiveMethod = new LinkedList<>();
 
         existsApplicableMethod = best != null;
         if(!existsApplicableMethod) {
@@ -54,7 +70,7 @@ public class GenericCallInjector implements AbstractInjector {
         // and if we already did the before methods for this call
         // also, only do this if there is an actual method to call after the setup ones
         if(!isSetup && !beforeMethodsDone) {
-            doBeforeMethods(originalClass, originalArgs);
+            doBeforeMethods(originalClass, originalArgs,effectiveMethod);
         }
 
         beforeMethodsDone = true;
@@ -68,14 +84,17 @@ public class GenericCallInjector implements AbstractInjector {
                 best.setAccessible(true); // take care of private methods
                 result = best.invoke(null, originalArgs);
                 invokedSuccessful = true;
+                effectiveMethod.add(best);
             } catch (Exception e) {
                 invokedSuccessful = false;
             }
 
             if (!isSetup) {
-                doAfterMethods(originalClass, originalArgs);
+                doAfterMethods(originalClass, originalArgs,effectiveMethod);
             }
             beforeMethodsDone = false;
+
+            effectiveMethodMap.put(effectiveMethodKey,effectiveMethod);
 
             return result;
         }
@@ -88,7 +107,7 @@ public class GenericCallInjector implements AbstractInjector {
         return names[names.length -1];
     }
 
-    private static void doBeforeMethods(Class originalClass, Object[] originalArgs){
+    private static void doBeforeMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
 
         Method[] methods = originalClass.getDeclaredMethods();
 
@@ -115,22 +134,14 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
-        isSetup = true;
-        for (Method m : beforeMethods) {
-            m.setAccessible(true);
+        effectiveMethod.addAll(beforeMethods);
 
-            try {
-                m.invoke(null,originalArgs);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
+        isSetup = true;
+        MethodUtils.callMethodList(beforeMethods,originalArgs);
         isSetup = false;
     }
 
-    private static void doAfterMethods(Class originalClass, Object[] originalArgs){
+    private static void doAfterMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
 
         Method[] methods = originalClass.getDeclaredMethods();
 
@@ -157,19 +168,10 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
+        effectiveMethod.addAll(afterMethods);
+
         isSetup = true;
-        for (Method m : afterMethods) {
-
-            m.setAccessible(true);
-
-            try {
-                m.invoke(null,originalArgs);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
+        MethodUtils.callMethodList(afterMethods,originalArgs);
         isSetup = false;
 
     }
