@@ -1,6 +1,10 @@
 package ist.meic.pa.GenericFunctionsExtended.injectors.utils;
 
 
+import ist.meic.pa.GenericFunctionsExtended.AfterMethod;
+import ist.meic.pa.GenericFunctionsExtended.BeforeMethod;
+import ist.meic.pa.GenericFunctionsExtended.injectors.GenericCallInjector;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -11,13 +15,26 @@ public class MethodUtils {
    public static void callMethodList(List<Method> methods, Object[] arguments) {
        try {
            for(Method m : methods) {
-                   m.invoke(null, arguments);
+               if(isSetupMethod(m)){
+                   GenericCallInjector.isSetup = true;
+               }
+
+               m.invoke(null, arguments);
+
+               if(isSetupMethod(m)) {
+                   GenericCallInjector.isSetup = false;
+               }
            }
        } catch (Exception e) {
            // Can't really do anything
            e.printStackTrace();
        }
    }
+
+
+    public static boolean isSetupMethod(Method m) {
+        return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);
+    }
 
     public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
         return compareMethodArguments(originalArgs, thisMethod, thatMethod) < 0;

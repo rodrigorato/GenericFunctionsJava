@@ -179,7 +179,7 @@ public class GenericCallInjector implements AbstractInjector {
 
         Method bestMethod = null;
         for(Method candidate : allMethods) {
-            if(MethodUtils.isMethodApplicable(candidate, args) && !isSetupMethod(candidate)) {
+            if(MethodUtils.isMethodApplicable(candidate, args) && !MethodUtils.isSetupMethod(candidate)) {
                 if (bestMethod == null ||
                         MethodUtils.isMethodMoreSpecific(args, candidate, bestMethod)) {
                     //System.out.println("New best is\n" + candidate);
@@ -191,9 +191,6 @@ public class GenericCallInjector implements AbstractInjector {
 
     }
 
-    public static boolean isSetupMethod(Method m) {
-        return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);
-    }
 
     private String generateCallBackFunctionCall(String methodName, String returnClassName) {
         String code = "";
