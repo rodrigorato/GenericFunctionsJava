@@ -30,7 +30,9 @@ public class MethodUtils {
            // Can't really do anything
            e.printStackTrace();
        }
+       return null;
    }
+
 
 
     public static boolean isSetupMethod(Method m) {
