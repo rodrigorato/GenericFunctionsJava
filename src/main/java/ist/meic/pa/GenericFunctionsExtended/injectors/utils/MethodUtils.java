@@ -12,19 +12,20 @@ import java.util.List;
 
 public class MethodUtils {
 
-   public static void callMethodList(List<Method> methods, Object[] arguments) {
+   public static Object callMethodList(List<Method> methods, Object[] arguments) {
+       Object ret = null;
        try {
            for(Method m : methods) {
                if(isSetupMethod(m)){
                    GenericCallInjector.isSetup = true;
-               }
-
-               m.invoke(null, arguments);
-
-               if(isSetupMethod(m)) {
+                   m.invoke(null, arguments);
                    GenericCallInjector.isSetup = false;
+               } else {
+                   ret = m.invoke(null, arguments);
                }
            }
+
+           return ret;
        } catch (Exception e) {
            // Can't really do anything
            e.printStackTrace();
