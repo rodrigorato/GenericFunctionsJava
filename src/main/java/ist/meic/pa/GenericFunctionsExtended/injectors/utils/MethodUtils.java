@@ -12,19 +12,22 @@ import java.util.List;
 
 public class MethodUtils {
 
-   public static Object callMethodList(List<Method> methods, Object[] arguments) {
+   public static Object callMethodList(List<Method> methods, Object[] arguments, String currentMethod) {
        Object ret = null;
        try {
            for(Method m : methods) {
+               m.setAccessible(true);
                if(isSetupMethod(m)){
                    GenericCallInjector.isSetup = true;
                    m.invoke(null, arguments);
                    GenericCallInjector.isSetup = false;
-               } else {
+               } else if(!currentMethod.equals(getLongNameFromMethod(m))) {
+                   GenericCallInjector.beforeMethodsDone = true;
                    ret = m.invoke(null, arguments);
                }
            }
 
+           GenericCallInjector.beforeMethodsDone = false;
            return ret;
        } catch (Exception e) {
            // Can't really do anything
@@ -33,7 +36,10 @@ public class MethodUtils {
        return null;
    }
 
-
+    private static String getLongNameFromMethod(Method m) {
+        String[] names = m.toString().split(" ");
+        return names[names.length -1];
+    }
 
     public static boolean isSetupMethod(Method m) {
         return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);

@@ -53,7 +53,7 @@ public class GenericCallInjector implements AbstractInjector {
         }
 
         if(effectiveMethodMap.containsKey(effectiveMethodKey)){
-            return MethodUtils.callMethodList(effectiveMethodMap.get(effectiveMethodKey),originalArgs);
+            return MethodUtils.callMethodList(effectiveMethodMap.get(effectiveMethodKey),originalArgs,methodLongName);
         }
 
 
@@ -136,9 +136,7 @@ public class GenericCallInjector implements AbstractInjector {
 
         effectiveMethod.addAll(beforeMethods);
 
-        isSetup = true;
-        MethodUtils.callMethodList(beforeMethods,originalArgs);
-        isSetup = false;
+        MethodUtils.callMethodList(beforeMethods,originalArgs,"");
     }
 
     private static void doAfterMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
@@ -170,9 +168,7 @@ public class GenericCallInjector implements AbstractInjector {
 
         effectiveMethod.addAll(afterMethods);
 
-        isSetup = true;
-        MethodUtils.callMethodList(afterMethods,originalArgs);
-        isSetup = false;
+        MethodUtils.callMethodList(afterMethods,originalArgs,"");
 
     }
 
