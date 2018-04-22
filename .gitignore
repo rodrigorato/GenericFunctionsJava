@@ -3,6 +3,7 @@
 
 # Generated test outputs
 *.my_out
+*.my_extended_out
 
 ### Intellij+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
