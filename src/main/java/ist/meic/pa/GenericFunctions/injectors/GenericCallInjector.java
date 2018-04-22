@@ -8,11 +8,9 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * This class is responsible for injecting code into the loaded classes,
@@ -22,7 +20,8 @@ public class GenericCallInjector implements AbstractInjector {
     private String callBackFunctionName = "callBack";
     public static boolean invokedSuccessful = false;
     public static boolean isSetup = false;
-    public static boolean beforeDone = false;
+    public static boolean beforeMethodsDone = false;
+    public static boolean existsApplicableMethod = false;
 
     @Override
     public void injectCode(CtClass ctClass) {
@@ -44,36 +43,44 @@ public class GenericCallInjector implements AbstractInjector {
 
     @SuppressWarnings("unused")
     public static Object callBack(Class originalClass, String methodLongName, Object[] originalArgs) {
+        Method best = findBestMethod(originalClass, originalArgs);
 
-        if(!isSetup && !beforeDone) { // check if this is not a setup method call and if we already did the before methods for this call
+        existsApplicableMethod = best != null;
+        if(!existsApplicableMethod) {
+            return null;
+        }
+
+        // check if this is not a setup method call
+        // and if we already did the before methods for this call
+        // also, only do this if there is an actual method to call after the setup ones
+        if(!isSetup && !beforeMethodsDone) {
             doBeforeMethods(originalClass, originalArgs);
         }
 
-        beforeDone = true;
-
+        beforeMethodsDone = true;
         invokedSuccessful = false;
 
-        try {
-            Method best = findBestMethod(originalClass, originalArgs);
-            if (best == null)
-                return null;
-            if(!methodLongName.equals(getLongNameFromMethod(best))) {
+        // And if it's not the method we're running right now
+        if (!methodLongName.equals(getLongNameFromMethod(best))) {
+            Object result = null;
+            try {
+                // Call the actual method
                 best.setAccessible(true); // take care of private methods
-                Object result = best.invoke(null, originalArgs);
+                result = best.invoke(null, originalArgs);
                 invokedSuccessful = true;
-                if(!isSetup) {
-                    doAfterMethods(originalClass, originalArgs);
-                }
-                beforeDone = false;
-                return result;
+            } catch (Exception e) {
+                invokedSuccessful = false;
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (!isSetup) {
+                doAfterMethods(originalClass, originalArgs);
+            }
+            beforeMethodsDone = false;
+
+            return result;
         }
 
-        return null;
-
+        return null; // We're done here!
     }
 
     private static String getLongNameFromMethod(Method m) {
@@ -189,19 +196,30 @@ public class GenericCallInjector implements AbstractInjector {
     }
 
     private String generateCallBackFunctionCall(String methodName, String returnClassName) {
+        String code = "";
+
         if (returnClassName.equals("void")){
-            return "if (!ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.isSetup){" +
-                    "ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
-                    "." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
-                    "if(ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.invokedSuccessful){" +
-                    "   return;" +
-                    "}}";
+            code += "if (!ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.isSetup){" +
+                    "   ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+                    "       ." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
+                    "   if(ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.invokedSuccessful){" +
+                    "       return;" +
+                    "   }" +
+                    "}";
+        } else {
+            code += "Object ret = ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+                    "                   ." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
+                    "if(ret != null) {" +
+                    "   return (" + returnClassName + ")ret;" +
+                    "}";
         }
-        return "Object ret = ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
-                "." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
-                "if(ret != null) {" +
-                "   return (" + returnClassName + ")ret;" +
+
+        code += "if(!ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+                "       .existsApplicableMethod) {" +
+                "   return " + (returnClassName.equals("void") ? "" : "null") + ";" +
                 "}";
+
+        return code;
     }
 
 }
