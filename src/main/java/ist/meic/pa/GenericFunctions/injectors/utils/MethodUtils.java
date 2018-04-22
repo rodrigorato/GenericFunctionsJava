@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 
 public class MethodUtils {
 
-    public static boolean isMethodMoreSpecific(Method thisMethod, Method thatMethod) {
-        return compareMethodArguments(thisMethod, thatMethod) < 0;
+public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
+        return compareMethodArguments(originalArgs, thisMethod, thatMethod) < 0;
     }
 
     /**
@@ -15,7 +15,7 @@ public class MethodUtils {
      *          = 0 - If the first method argument types are the same as the second argument's
      *          > 0 - If the first method arguments are less specific than the second argument's
      */
-    public static int compareMethodArguments(Method thisMethod, Method thatMethod) {
+    public static int compareMethodArguments(Object[] originalArgs, Method thisMethod, Method thatMethod) {
         Class[] thisParameterTypes = thisMethod.getParameterTypes();
         Class[] thatParameterTypes = thatMethod.getParameterTypes();
 
@@ -27,6 +27,17 @@ public class MethodUtils {
                     return -1;
 
                 } else {
+                    if(thisParameterTypes[p].isInterface() && thatParameterTypes[p].isInterface()) {
+
+                        // Return according to the original arg type's interface declarations
+                        for(Class interfaceType : originalArgs[p].getClass().getInterfaces()) {
+                            if(isSubOf(thisParameterTypes[p], interfaceType)) {
+                                return -1;
+                            } else if(isSubOf(thatParameterTypes[p], interfaceType)) {
+                                return 1;
+                            }
+                        }
+                    }
                     return 1;
                 }
             }

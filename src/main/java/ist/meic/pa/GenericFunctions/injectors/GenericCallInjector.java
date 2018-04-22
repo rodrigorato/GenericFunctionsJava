@@ -95,7 +95,7 @@ public class GenericCallInjector implements AbstractInjector {
                 else{
                     boolean added = false;
                     for(int i = 0; i < beforeMethods.size(); i++){
-                        if(MethodUtils.isMethodMoreSpecific(candidate,beforeMethods.get(i))){
+                        if(MethodUtils.isMethodMoreSpecific(originalArgs, candidate,beforeMethods.get(i))){
                             beforeMethods.add(i,candidate);
                             added = true;
                             break;
@@ -137,7 +137,7 @@ public class GenericCallInjector implements AbstractInjector {
                 else{
                     boolean added = false;
                     for(int i = 0; i < afterMethods.size(); i++){
-                        if(MethodUtils.isMethodMoreSpecific(afterMethods.get(i),candidate)){
+                        if(MethodUtils.isMethodMoreSpecific(originalArgs, afterMethods.get(i),candidate)){
                             afterMethods.add(i,candidate);
                             added = true;
                             break;
@@ -174,7 +174,8 @@ public class GenericCallInjector implements AbstractInjector {
         for(Method candidate : allMethods) {
             if(MethodUtils.isMethodApplicable(candidate, args) && !isSetupMethod(candidate)) {
                 if (bestMethod == null ||
-                        MethodUtils.isMethodMoreSpecific(candidate, bestMethod)) {
+                        MethodUtils.isMethodMoreSpecific(args, candidate, bestMethod)) {
+                    //System.out.println("New best is\n" + candidate);
                     bestMethod = candidate;
                 }
             }
