@@ -5,6 +5,9 @@ TESTS_DIR=./tests_outputs/
 # Compile as described in the project guide
 gradle compileJava build
 
+# Delete old out files
+rm tests_outputs/*my*out
+
 # Run tests with Gradle and save output to file
 for t in src/main/java/ist/meic/pa/GenericFunctions/examples/Test*.java; do
     test_name=$(basename $t .java)
