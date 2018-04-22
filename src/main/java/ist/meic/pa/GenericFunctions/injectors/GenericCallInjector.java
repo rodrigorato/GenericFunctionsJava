@@ -199,22 +199,22 @@ public class GenericCallInjector implements AbstractInjector {
         String code = "";
 
         if (returnClassName.equals("void")){
-            code += "if (!ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.isSetup){" +
-                    "   ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+            code += "if (!" + GenericCallInjector.class.getCanonicalName() + ".isSetup){" +
+                    "   " + GenericCallInjector.class.getCanonicalName() +
                     "       ." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
-                    "   if(ist.meic.pa.GenericFunctions.injectors.GenericCallInjector.invokedSuccessful){" +
+                    "   if(" + GenericCallInjector.class.getCanonicalName() + ".invokedSuccessful){" +
                     "       return;" +
                     "   }" +
                     "}";
         } else {
-            code += "Object ret = ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+            code += "Object ret = " + GenericCallInjector.class.getCanonicalName() +
                     "                   ." + callBackFunctionName + "($class, \"" + methodName + "\", $args);" +
                     "if(ret != null) {" +
                     "   return (" + returnClassName + ")ret;" +
                     "}";
         }
 
-        code += "if(!ist.meic.pa.GenericFunctions.injectors.GenericCallInjector" +
+        code += "if(!" + GenericCallInjector.class.getCanonicalName() +
                 "       .existsApplicableMethod) {" +
                 "   return " + (returnClassName.equals("void") ? "" : "null") + ";" +
                 "}";
