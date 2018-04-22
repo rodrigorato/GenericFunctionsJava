@@ -36,11 +36,14 @@ public class MethodUtils {
        return null;
    }
 
-    private static String getLongNameFromMethod(Method m) {
+    public static String getLongNameFromMethod(Method m) {
         String[] names = m.toString().split(" ");
-        return names[names.length -1];
+        return names[names.length - 1];
     }
 
+    /**
+     * @return true if the method is a before or an after method
+     */
     public static boolean isSetupMethod(Method m) {
         return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);
     }

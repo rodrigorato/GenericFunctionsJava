@@ -47,11 +47,16 @@ public class GenericCallInjector implements AbstractInjector {
     @SuppressWarnings("unused")
     public static Object callBack(Class originalClass, String methodLongName, Object[] originalArgs) {
 
+
+        // create unique key for cache based on the names
+        // of the types of the arguments
         String effectiveMethodKey = "";
         for (Object o : originalArgs) {
             effectiveMethodKey += o.getClass().getCanonicalName();
         }
 
+
+        // if we have seen this combination of types just run the same methods straight from the cache
         if(effectiveMethodMap.containsKey(effectiveMethodKey)){
             return MethodUtils.callMethodList(effectiveMethodMap.get(effectiveMethodKey),originalArgs,methodLongName);
         }
@@ -77,7 +82,7 @@ public class GenericCallInjector implements AbstractInjector {
         invokedSuccessful = false;
 
         // And if it's not the method we're running right now
-        if (!methodLongName.equals(getLongNameFromMethod(best))) {
+        if (!methodLongName.equals(MethodUtils.getLongNameFromMethod(best))) {
             Object result = null;
             try {
                 // Call the actual method
@@ -94,17 +99,14 @@ public class GenericCallInjector implements AbstractInjector {
             }
             beforeMethodsDone = false;
 
+
+            // store this method combination in this cache for future use
             effectiveMethodMap.put(effectiveMethodKey,effectiveMethod);
 
             return result;
         }
 
         return null; // We're done here!
-    }
-
-    private static String getLongNameFromMethod(Method m) {
-        String[] names = m.toString().split(" ");
-        return names[names.length -1];
     }
 
     private static void doBeforeMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
@@ -180,7 +182,6 @@ public class GenericCallInjector implements AbstractInjector {
             if(MethodUtils.isMethodApplicable(candidate, args) && !MethodUtils.isSetupMethod(candidate)) {
                 if (bestMethod == null ||
                         MethodUtils.isMethodMoreSpecific(args, candidate, bestMethod)) {
-                    //System.out.println("New best is\n" + candidate);
                     bestMethod = candidate;
                 }
             }
