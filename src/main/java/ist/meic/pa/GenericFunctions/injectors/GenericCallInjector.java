@@ -8,7 +8,6 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
@@ -61,7 +60,7 @@ public class GenericCallInjector implements AbstractInjector {
         invokedSuccessful = false;
 
         // And if it's not the method we're running right now
-        if (!methodLongName.equals(getLongNameFromMethod(best))) {
+        if (!methodLongName.equals(MethodUtils.getLongNameFromMethod(best))) {
             Object result = null;
             try {
                 // Call the actual method
@@ -81,11 +80,6 @@ public class GenericCallInjector implements AbstractInjector {
         }
 
         return null; // We're done here!
-    }
-
-    private static String getLongNameFromMethod(Method m) {
-        String[] names = m.toString().split(" ");
-        return names[names.length -1];
     }
 
     private static void doBeforeMethods(Class originalClass, Object[] originalArgs){
@@ -115,19 +109,7 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
-        isSetup = true;
-        for (Method m : beforeMethods) {
-            m.setAccessible(true);
-
-            try {
-                m.invoke(null,originalArgs);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
-        isSetup = false;
+        MethodUtils.callMethodList(beforeMethods,originalArgs,"");
     }
 
     private static void doAfterMethods(Class originalClass, Object[] originalArgs){
@@ -157,20 +139,7 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
-        isSetup = true;
-        for (Method m : afterMethods) {
-
-            m.setAccessible(true);
-
-            try {
-                m.invoke(null,originalArgs);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
-        isSetup = false;
+        MethodUtils.callMethodList(afterMethods,originalArgs,"");
 
     }
 
@@ -179,20 +148,15 @@ public class GenericCallInjector implements AbstractInjector {
 
         Method bestMethod = null;
         for(Method candidate : allMethods) {
-            if(MethodUtils.isMethodApplicable(candidate, args) && !isSetupMethod(candidate)) {
+            if(MethodUtils.isMethodApplicable(candidate, args) && !MethodUtils.isSetupMethod(candidate)) {
                 if (bestMethod == null ||
                         MethodUtils.isMethodMoreSpecific(args, candidate, bestMethod)) {
-                    //System.out.println("New best is\n" + candidate);
                     bestMethod = candidate;
                 }
             }
         }
         return bestMethod;
 
-    }
-
-    public static boolean isSetupMethod(Method m) {
-        return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);
     }
 
     private String generateCallBackFunctionCall(String methodName, String returnClassName) {

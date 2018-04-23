@@ -1,11 +1,51 @@
 package ist.meic.pa.GenericFunctions.injectors.utils;
 
+import ist.meic.pa.GenericFunctions.AfterMethod;
+import ist.meic.pa.GenericFunctions.BeforeMethod;
+import ist.meic.pa.GenericFunctions.injectors.GenericCallInjector;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 public class MethodUtils {
 
-public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
+    public static Object callMethodList(List<Method> methods, Object[] arguments, String currentMethod) {
+        Object ret = null;
+        try {
+            for(Method m : methods) {
+                m.setAccessible(true);
+                if(isSetupMethod(m)){
+                    GenericCallInjector.isSetup = true;
+                    m.invoke(null, arguments);
+                    GenericCallInjector.isSetup = false;
+                } else if(!currentMethod.equals(getLongNameFromMethod(m))) {
+                    GenericCallInjector.beforeMethodsDone = true;
+                    ret = m.invoke(null, arguments);
+                }
+            }
+
+            GenericCallInjector.beforeMethodsDone = false;
+            return ret;
+        } catch (Exception e) {
+            // Can't really do anything
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String getLongNameFromMethod(Method m) {
+        String[] names = m.toString().split(" ");
+        return names[names.length - 1];
+    }
+
+    /**
+     * @return true if the method is a before or an after method
+     */
+    public static boolean isSetupMethod(Method m) {
+        return m.isAnnotationPresent(AfterMethod.class) || m.isAnnotationPresent(BeforeMethod.class);
+    }
+
+    public static boolean isMethodMoreSpecific(Object[] originalArgs, Method thisMethod, Method thatMethod) {
         return compareMethodArguments(originalArgs, thisMethod, thatMethod) < 0;
     }
 
