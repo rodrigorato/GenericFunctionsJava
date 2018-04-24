@@ -18,7 +18,17 @@ run {
     if (project.hasProperty('runArgs')) {
         args findProperty('runArgs')
     } else {
-        args = ['ist.meic.pa.GenericFunctions.examples.combine.CombineExample']
+        args = ['ist.meic.pa.GenericFunctions.examples.TestJ']
+    }
+}
+
+task runExtended (type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = 'ist.meic.pa.GenericFunctionsExtended.WithGenericFunctions'
+    if (project.hasProperty('runArgs')) {
+        args findProperty('runArgs')
+    } else {
+        args = ['ist.meic.pa.GenericFunctionsExtended.examples.TestJ']
     }
 }
 

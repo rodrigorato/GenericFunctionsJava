@@ -1,37 +1,40 @@
-package ist.meic.pa.GenericFunctions.injectors.utils;
+package ist.meic.pa.GenericFunctionsExtended.injectors.utils;
 
-import ist.meic.pa.GenericFunctions.AfterMethod;
-import ist.meic.pa.GenericFunctions.BeforeMethod;
-import ist.meic.pa.GenericFunctions.injectors.GenericCallInjector;
 
+import ist.meic.pa.GenericFunctionsExtended.AfterMethod;
+import ist.meic.pa.GenericFunctionsExtended.BeforeMethod;
+import ist.meic.pa.GenericFunctionsExtended.injectors.GenericCallInjector;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 public class MethodUtils {
 
-    public static Object callMethodList(List<Method> methods, Object[] arguments, String currentMethod) {
-        Object ret = null;
-        try {
-            for(Method m : methods) {
-                m.setAccessible(true);
-                if(isSetupMethod(m)){
-                    GenericCallInjector.isSetup = true;
-                    m.invoke(null, arguments);
-                    GenericCallInjector.isSetup = false;
-                } else if(!currentMethod.equals(getLongNameFromMethod(m))) {
-                    GenericCallInjector.beforeMethodsDone = true;
-                    ret = m.invoke(null, arguments);
-                }
-            }
+   public static Object callMethodList(List<Method> methods, Object[] arguments, String currentMethod) {
+       Object ret = null;
+       try {
+           for(Method m : methods) {
+               m.setAccessible(true);
+               if(isSetupMethod(m)){
+                   GenericCallInjector.isSetup = true;
+                   m.invoke(null, arguments);
+                   GenericCallInjector.isSetup = false;
+               } else if(!currentMethod.equals(getLongNameFromMethod(m))) {
+                   GenericCallInjector.beforeMethodsDone = true;
+                   ret = m.invoke(null, arguments);
+               }
+           }
 
-            GenericCallInjector.beforeMethodsDone = false;
-            return ret;
-        } catch (Exception e) {
-            // Can't really do anything
-            e.printStackTrace();
-        }
-        return null;
-    }
+           GenericCallInjector.beforeMethodsDone = false;
+           return ret;
+       } catch (Exception e) {
+           // Can't really do anything
+           e.printStackTrace();
+       }
+       return null;
+   }
 
     public static String getLongNameFromMethod(Method m) {
         String[] names = m.toString().split(" ");

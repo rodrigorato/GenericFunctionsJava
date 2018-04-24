@@ -1,15 +1,18 @@
-package ist.meic.pa.GenericFunctions.injectors;
+package ist.meic.pa.GenericFunctionsExtended.injectors;
 
-import ist.meic.pa.GenericFunctions.AfterMethod;
-import ist.meic.pa.GenericFunctions.BeforeMethod;
-import ist.meic.pa.GenericFunctions.injectors.utils.MethodUtils;
+import ist.meic.pa.GenericFunctionsExtended.AfterMethod;
+import ist.meic.pa.GenericFunctionsExtended.BeforeMethod;
+import ist.meic.pa.GenericFunctionsExtended.injectors.utils.MethodUtils;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is responsible for injecting code into the loaded classes,
@@ -21,6 +24,7 @@ public class GenericCallInjector implements AbstractInjector {
     public static boolean isSetup = false;
     public static boolean beforeMethodsDone = false;
     public static boolean existsApplicableMethod = false;
+    public static Map<String,List<Method>> effectiveMethodMap = new HashMap<>();
 
     @Override
     public void injectCode(CtClass ctClass) {
@@ -42,7 +46,25 @@ public class GenericCallInjector implements AbstractInjector {
 
     @SuppressWarnings("unused")
     public static Object callBack(Class originalClass, String methodLongName, Object[] originalArgs) {
+
+
+        // create unique key for cache based on the names
+        // of the types of the arguments
+        String effectiveMethodKey = originalClass.getCanonicalName();
+        for (Object o : originalArgs) {
+            effectiveMethodKey += o.getClass().getCanonicalName();
+        }
+
+
+        // if we have seen this combination of types just run the same methods straight from the cache
+        if(effectiveMethodMap.containsKey(effectiveMethodKey)){
+            return MethodUtils.callMethodList(effectiveMethodMap.get(effectiveMethodKey),originalArgs,methodLongName);
+        }
+
+
         Method best = findBestMethod(originalClass, originalArgs);
+
+        LinkedList<Method> effectiveMethod = new LinkedList<>();
 
         existsApplicableMethod = best != null;
         if(!existsApplicableMethod) {
@@ -53,7 +75,7 @@ public class GenericCallInjector implements AbstractInjector {
         // and if we already did the before methods for this call
         // also, only do this if there is an actual method to call after the setup ones
         if(!isSetup && !beforeMethodsDone) {
-            doBeforeMethods(originalClass, originalArgs);
+            doBeforeMethods(originalClass, originalArgs,effectiveMethod);
         }
 
         beforeMethodsDone = true;
@@ -67,14 +89,19 @@ public class GenericCallInjector implements AbstractInjector {
                 best.setAccessible(true); // take care of private methods
                 result = best.invoke(null, originalArgs);
                 invokedSuccessful = true;
+                effectiveMethod.add(best);
             } catch (Exception e) {
                 invokedSuccessful = false;
             }
 
             if (!isSetup) {
-                doAfterMethods(originalClass, originalArgs);
+                doAfterMethods(originalClass, originalArgs,effectiveMethod);
             }
             beforeMethodsDone = false;
+
+
+            // store this method combination in this cache for future use
+            effectiveMethodMap.put(effectiveMethodKey,effectiveMethod);
 
             return result;
         }
@@ -82,7 +109,7 @@ public class GenericCallInjector implements AbstractInjector {
         return null; // We're done here!
     }
 
-    private static void doBeforeMethods(Class originalClass, Object[] originalArgs){
+    private static void doBeforeMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
 
         Method[] methods = originalClass.getDeclaredMethods();
 
@@ -109,10 +136,12 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
+        effectiveMethod.addAll(beforeMethods);
+
         MethodUtils.callMethodList(beforeMethods,originalArgs,"");
     }
 
-    private static void doAfterMethods(Class originalClass, Object[] originalArgs){
+    private static void doAfterMethods(Class originalClass, Object[] originalArgs, List<Method> effectiveMethod){
 
         Method[] methods = originalClass.getDeclaredMethods();
 
@@ -139,6 +168,8 @@ public class GenericCallInjector implements AbstractInjector {
             }
         }
 
+        effectiveMethod.addAll(afterMethods);
+
         MethodUtils.callMethodList(afterMethods,originalArgs,"");
 
     }
@@ -158,6 +189,7 @@ public class GenericCallInjector implements AbstractInjector {
         return bestMethod;
 
     }
+
 
     private String generateCallBackFunctionCall(String methodName, String returnClassName) {
         String code = "";
