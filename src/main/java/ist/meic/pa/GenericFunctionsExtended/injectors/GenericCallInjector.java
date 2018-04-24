@@ -50,7 +50,7 @@ public class GenericCallInjector implements AbstractInjector {
 
         // create unique key for cache based on the names
         // of the types of the arguments
-        String effectiveMethodKey = "";
+        String effectiveMethodKey = originalClass.getCanonicalName();
         for (Object o : originalArgs) {
             effectiveMethodKey += o.getClass().getCanonicalName();
         }
